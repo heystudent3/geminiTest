@@ -1,0 +1,14 @@
+body {
+    margin: 0;
+    overflow: hidden; /* Prevent scrollbars */
+    background-color: #222; /* Dark background */
+    display: flex;
+    justify-content: center; /* Center canvas horizontally */
+    align-items: center;     /* Center canvas vertically */
+    height: 100vh;         /* Take full viewport height */
+}
+
+#gameCanvas {
+    background-color: #333; /* Canvas background color - can be removed later */
+    border: 1px solid #555; /* Optional border for canvas */
+}

@@ -1,0 +1,79 @@
+# Hosting Instructions for Pixel Quest Online
+
+## A. Host the Client (Frontend) on Netlify
+
+1.  Push your code to GitHub:
+    *   Make sure you have a GitHub repository for your pixel-quest-online project.
+    *   Commit all your files and push them to your GitHub repository.
+2.  Sign up/Log in to Netlify:
+    *   Go to https://www.netlify.com/ and sign up or log in.
+3.  Create a New Site from Git:
+    *   Click the "Add new site" button.
+    *   Select "Import an existing project" and then "Deploy with GitHub".
+    *   Authorize Netlify to access your GitHub repositories.
+    *   Choose your pixel-quest-online repository.
+4.  Configure Build Settings (Usually Automatic):
+    *   Netlify usually auto-detects settings for static sites.
+    *   Build command: Leave blank (for a simple HTML/CSS/JS site).
+    *   Publish directory: client (because your index.html and other client files are in the client folder).
+    *   Click "Deploy site".
+5.  Wait for Deployment:
+    *   Netlify will build and deploy your client-side code.
+    *   You'll get a Netlify URL (like your-site-name.netlify.app). This URL will be where your client is hosted.
+
+## B. Host the Server (Backend) on Render
+
+1.  Sign up/Log in to Render:
+    *   Go to https://render.com/ and sign up or log in.
+2.  Create a New Web Service:
+    *   Click the "New +" button and select "Web Service".
+3.  Connect to GitHub Repository:
+    *   Choose "Deploy from a Git repository".
+    *   Authorize Render to access your GitHub repositories.
+    *   Select your pixel-quest-online repository.
+4.  Configure Render Web Service:
+    *   Name: Give your service a name (e.g., pixel-quest-online-server).
+    *   Environment: Choose "Node".
+    *   Region: Select a region close to your target audience.
+    *   Branch: main (or your main branch name).
+    *   Root Directory: Leave blank (or /server if Render needs to know the server files are in the server folder).
+    *   Runtime: Node version (choose a recent stable version, e.g., Node 18 or 20).
+    *   Build Command: npm install
+    *   Start Command: npm start
+5.  Choose Instance Type (Free Tier):
+    *   Scroll down to "Instance Type" and choose "Free".
+    *   Note: Render free tier web services may spin down after inactivity and have limited resources. For a more reliable server, you might need a paid tier later.
+6.  Deploy Web Service:
+    *   Click "Create Web Service".
+7.  Wait for Deployment:
+    *   Render will build and deploy your server.
+    *   You'll get a Render URL (like your-service-name.onrender.com). This URL will be where your server is hosted.
+    *   **Important:** Note down the base URL of your Render server.
+
+## C. Update Client WebSocket URL for Production
+
+1.  Edit client/script.js:
+    *   Find this line in your client/script.js:
+        `websocket = new WebSocket('ws://localhost:3000'); // Connect to local server (for development)`
+    *   Replace `ws://localhost:3000` with your Render server's WebSocket URL. It will be something like:
+        `websocket = new WebSocket('wss://your-render-service-name.onrender.com'); // Connect to Render server`
+    *   **Important:** Use `wss://` (WebSocket Secure) for production, especially if you eventually handle any sensitive data. Render's free tier usually provides HTTPS/WSS automatically.
+2.  Re-deploy Client to Netlify:
+    *   Commit the change to client/script.js and push it to your GitHub repository.
+    *   Netlify should automatically redeploy your client when it detects changes in your repository.
+
+## D. Test Your Hosted Multiplayer Game!
+
+1.  Open your Netlify URL in multiple browser windows or on different devices.
+2.  You should see:
+    *   "Client script loaded." in the browser console.
+    *   "WebSocket connection opened" in the browser console.
+    *   "Client connected" in your Render server logs (visible on the Render dashboard).
+    *   "Received message: Welcome to Pixel Quest Online Server!" in the browser console (and echoed messages if you send them).
+3.  Check for Errors:
+    *   If you don't see the connection messages, check the browser console for JavaScript errors and the Render server logs for server-side errors.
+
+**Important Notes:**
+
+*   Render Free Tier Limitations: Be aware of Render's free tier limitations. Your server might become inactive after periods of inactivity. This is fine for learning and basic testing, but for a more consistently online game, you'll need to consider a paid hosting solution later.
+*   Security (Basic): For this very simple example, security is minimal. In a real game, you'd need to think about security more seriously, especially as you add features like user accounts, data persistence, etc.
