@@ -1,12 +1,7 @@
 console.log("Client script loaded.");
 
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-const playerSize = 20; // Size of the player square
-const playerColor = 'blue'; // Color of the player
-let playerX = 50; // Initial player X position
-let playerY = 50; // Initial player Y position
+const gameOutput = document.getElementById('gameOutput');
+const commandInput = document.getElementById('commandInput');
 
 let websocket;
 
@@ -23,6 +18,7 @@ function connectWebSocket() {
         console.log('Received message:', event.data);
         // --- Handle messages from server here ---
         // For now, just log them
+        updateGameOutput(event.data);
     };
 
     websocket.onclose = () => {
@@ -38,20 +34,19 @@ function connectWebSocket() {
     };
 }
 
-function drawPlayer() {
-    ctx.fillStyle = playerColor;
-    ctx.fillRect(playerX, playerY, playerSize, playerSize);
+function updateGameOutput(message) {
+    gameOutput.innerHTML += `<p>${message}</p>`;
 }
 
-function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas each frame
-    drawPlayer();
-}
-
-function gameLoop() {
-    render();
-    requestAnimationFrame(gameLoop);
-}
+commandInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+        const command = commandInput.value;
+        console.log('Command entered:', command);
+        updateGameOutput(`> ${command}`); // Display the command in the game output
+        websocket.send(command); // Send the command to the server
+        commandInput.value = ''; // Clear the input field
+    }
+});
 
 connectWebSocket(); // Establish WebSocket connection when script loads
-gameLoop(); // Start the game loop
+updateGameOutput("Welcome to the text-based RPG!"); // Initial game message
