@@ -34,9 +34,14 @@ function connectWebSocket() {
 }
 
 function updateGameOutput(message) {
-    const messageElement = document.createElement('p');
-    messageElement.textContent = message; // Use textContent for safety
-    gameOutput.appendChild(messageElement);
+    // Handle potential multi-line messages
+    const lines = message.split('\n');
+    lines.forEach(line => {
+        const messageElement = document.createElement('p');
+        // Use non-breaking space for empty lines to ensure they take up space
+        messageElement.textContent = line || '\u00A0';
+        gameOutput.appendChild(messageElement);
+    });
     gameOutput.scrollTop = gameOutput.scrollHeight; // Scroll to bottom
 }
 
