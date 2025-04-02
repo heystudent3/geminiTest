@@ -14,78 +14,104 @@ const wss = new WebSocketServer({ server });
 const gameData = require('./game_data');
 const locations = gameData.locations;
 
-// Player character
-const player = {
-    location: "forest",
-    inventory: ["rusty sword"]
-};
+// No global player state - state will be attached to each connection
 
-wss.on('connection', ws => {
-    console.log('Client connected');
-
-    ws.send(locations[player.location].description + ` You have: ${player.inventory.join(", ")}`); // Send initial location description
-
-ws.on('message', message => {
-    console.log(`Received message: ${message}`);
-    const command = message.toString().trim().split(" "); // Convert message to string, trim whitespace, and split into command and arguments
+// Function to handle commands for a specific player (ws)
+function handleCommand(ws, commandParts) {
+    const command = commandParts[0];
+    const playerState = ws.playerState; // Get state associated with this connection
     let response = "";
+    const currentLocationData = locations[playerState.location];
 
-    switch (command[0]) {
+    switch (command) {
         case "look":
-            let description = locations[player.location].description;
-            if (locations[player.location].enemy) {
-                description += ` A ${locations[player.location].enemy} is here.`;
+            let description = currentLocationData.description;
+            // NOTE: Enemy/Item state is currently global in locations data
+            if (currentLocationData.enemy) {
+                description += ` A ${currentLocationData.enemy} is here.`;
             }
-            response = description + ` You have: ${player.inventory.join(", ")}`;
+            if (currentLocationData.item && !playerState.inventory.includes(currentLocationData.item)) {
+                 // Only mention item if player doesn't have it (basic check)
+                 // description += ` You see a ${currentLocationData.item}.`; // Redundant if in main desc
+            }
+            response = description + ` You have: ${playerState.inventory.join(", ") || 'nothing'}`;
             break;
         case "north":
-            if (locations[player.location].north) {
-                player.location = locations[player.location].north;
-                let description = locations[player.location].description;
-                if (locations[player.location].enemy) {
-                    description += ` A ${locations[player.location].enemy} is here.`;
-                }
-                response = locations[player.location].description + ` You have: ${player.inventory.join(", ")}`;
-            } else {
-                response = "You cannot go north from here.";
-            }
-            break;
+        case "south":
         case "east":
-             if (locations[player.location].east) {
-                player.location = locations[player.location].east;
-                response = locations[player.location].description + ` You have: ${player.inventory.join(", ")}`;
+        case "west":
+            if (currentLocationData[command]) {
+                playerState.location = currentLocationData[command];
+                // Send new location info after moving
+                const newLocationData = locations[playerState.location];
+                let newDescription = newLocationData.description;
+                 if (newLocationData.enemy) {
+                    newDescription += ` A ${newLocationData.enemy} is here.`;
+                 }
+                response = newDescription + ` You have: ${playerState.inventory.join(", ") || 'nothing'}`;
             } else {
-                response = "You cannot go east from here.";
+                response = `You cannot go ${command} from here.`;
             }
             break;
         case "inventory":
-            response = `You have: ${player.inventory.join(", ")}`;
+        case "inv": // Alias
+            response = `You have: ${playerState.inventory.join(", ") || 'nothing'}`;
             break;
         case "get":
-            if (locations[player.location].item) {
-                const item = locations[player.location].item;
-                player.inventory.push(item);
-                delete locations[player.location].item;
-                response = `You got the ${item}. You have: ${player.inventory.join(", ")}`;
+             // NOTE: Item state modification is currently global
+            if (currentLocationData.item) {
+                const item = currentLocationData.item;
+                if (!playerState.inventory.includes(item)) { // Prevent getting multiple times
+                    playerState.inventory.push(item);
+                    // delete currentLocationData.item; // Deleting globally affects all players
+                    response = `You picked up the ${item}. Inventory: ${playerState.inventory.join(", ")}`;
+                } else {
+                    response = `You already have the ${item}.`;
+                }
             } else {
                 response = "There is nothing to get here.";
             }
             break;
         case "attack":
-            if (locations[player.location].enemy) {
-                const enemy = locations[player.location].enemy;
-                delete locations[player.location].enemy;
-                response = `You attack the ${enemy} with your rusty sword and defeat it!`;
+            // NOTE: Enemy state modification is currently global
+            if (currentLocationData.enemy) {
+                const enemy = currentLocationData.enemy;
+                // Simple combat: enemy is defeated immediately
+                delete currentLocationData.enemy; // Removing globally affects all players
+                response = `You attack the ${enemy} with your ${playerState.inventory[0] || 'bare hands'} and defeat it!`;
+                 // TODO: Add proper combat logic (HP, damage, etc.)
+                 // TODO: Remove enemy from location state properly for multiplayer
             } else {
                 response = "There is nothing to attack here.";
             }
             break;
         default:
-            response = `Unknown command: ${command[0]}. Try 'look', 'north', 'east', 'inventory', 'get', or 'attack'.`;
+            response = `Unknown command: '${command}'. Try 'look', 'north', 'south', 'east', 'west', 'inventory', 'get', 'attack'.`;
     }
-
     ws.send(response);
-});
+}
+
+
+wss.on('connection', ws => {
+    console.log('Client connected');
+
+    // Initialize state for this connection
+    ws.playerState = {
+        location: "forest", // Starting location
+        inventory: ["rusty sword"] // Starting inventory
+    };
+
+    // Send initial location description to the newly connected client
+    handleCommand(ws, ["look"]); // Use handleCommand to send initial state
+
+    // Handle messages from this client
+    ws.on('message', message => {
+        console.log(`Received message from client: ${message}`);
+        const commandParts = message.toString().trim().split(" ");
+        if (commandParts.length > 0 && commandParts[0] !== "") {
+             handleCommand(ws, commandParts);
+        }
+    });
 
     ws.on('close', () => {
         console.log('Client disconnected');

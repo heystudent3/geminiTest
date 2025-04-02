@@ -1,4 +1,4 @@
-# Hosting Instructions for Pixel Quest Online
+# Hosting Instructions for Text Quest RPG
 
 ## A. Host the Client (Frontend) on Netlify
 
@@ -36,10 +36,10 @@
     *   Environment: Choose "Node".
     *   Region: Select a region close to your target audience.
     *   Branch: main (or your main branch name).
-    *   Root Directory: Leave blank (or /server if Render needs to know the server files are in the server folder).
+    *   Root Directory: server (since package.json and server.js are in the server folder)
     *   Runtime: Node version (choose a recent stable version, e.g., Node 18 or 20).
-    *   Build Command: cd server && npm install
-    *   Start Command: npm start
+    *   Build Command: npm install (Render will run this inside the Root Directory)
+    *   Start Command: node server.js (or npm start if defined in package.json)
 5.  Choose Instance Type (Free Tier):
     *   Scroll down to "Instance Type" and choose "Free".
     *   Note: Render free tier web services may spin down after inactivity and have limited resources. For a more reliable server, you might need a paid tier later.
@@ -54,9 +54,9 @@
 
 1.  Edit client/script.js:
     *   Find this line in your client/script.js:
-        `websocket = new WebSocket('ws://localhost:3000'); // Connect to local server (for development)`
+        `const websocketURL = 'ws://localhost:3000'; // Default for local dev`
     *   Replace `ws://localhost:3000` with your Render server's WebSocket URL. It will be something like:
-        `websocket = new WebSocket('wss://your-render-service-name.onrender.com'); // Connect to Render server`
+        `const websocketURL = 'wss://your-render-service-name.onrender.com'; // Example Render URL`
     *   **Important:** Use `wss://` (WebSocket Secure) for production, especially if you eventually handle any sensitive data. Render's free tier usually provides HTTPS/WSS automatically.
 2.  Re-deploy Client to Netlify:
     *   Commit the change to client/script.js and push it to your GitHub repository.
@@ -68,8 +68,9 @@
 2.  You should see:
     *   "Client script loaded." in the browser console.
     *   "WebSocket connection opened" in the browser console.
+    *   The initial location description (e.g., "You are standing in a forest...") displayed in the game output area on the page.
     *   "Client connected" in your Render server logs (visible on the Render dashboard).
-    *   "Received message: Welcome to Pixel Quest Online Server!" in the browser console (and echoed messages if you send them).
+    *   Further messages from the server appearing in the game output area as you enter commands.
 3.  Check for Errors:
     *   If you don't see the connection messages, check the browser console for JavaScript errors and the Render server logs for server-side errors.
 

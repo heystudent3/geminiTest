@@ -1,14 +1,37 @@
 body {
     margin: 0;
-    overflow: hidden; /* Prevent scrollbars */
+    padding: 20px;
     background-color: #222; /* Dark background */
+    color: #eee; /* Light text */
+    font-family: 'Courier New', Courier, monospace; /* Monospaced font for text RPG feel */
     display: flex;
-    justify-content: center; /* Center canvas horizontally */
-    align-items: center;     /* Center canvas vertically */
-    height: 100vh;         /* Take full viewport height */
+    flex-direction: column;
+    height: calc(100vh - 40px); /* Full height minus padding */
 }
 
-#gameCanvas {
-    background-color: #333; /* Canvas background color - can be removed later */
-    border: 1px solid #555; /* Optional border for canvas */
+#gameOutput {
+    flex-grow: 1; /* Take up available space */
+    background-color: #111; /* Slightly darker background for output */
+    border: 1px solid #444;
+    padding: 15px;
+    overflow-y: auto; /* Add scrollbar if content overflows */
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+#gameOutput p {
+    margin: 0 0 5px 0; /* Spacing between messages */
+}
+
+#commandInput {
+    padding: 10px;
+    font-family: inherit; /* Use the same font as body */
+    background-color: #333;
+    color: #eee;
+    border: 1px solid #555;
+    outline: none; /* Remove default focus outline */
+}
+
+#commandInput:focus {
+    border-color: #777;
 }

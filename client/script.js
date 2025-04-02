@@ -6,13 +6,14 @@ const commandInput = document.getElementById('commandInput');
 let websocket;
 
 function connectWebSocket() {
-    const websocketURL = prompt("Enter the WebSocket URL:", 'ws://localhost:3000');
-    websocket = new WebSocket(websocketURL); // Connect to local server (for development)
-    // For production, you'll need to change this to your deployed server URL (e.g., ws://your-render-app-url.onrender.com)
+    // TODO: Replace with your production Render WebSocket URL (wss://...) when deploying
+    // See hosting_instructions.txt for details.
+    const websocketURL = 'ws://localhost:3000'; // Connect to local server (for development)
+    websocket = new WebSocket(websocketURL);
 
     websocket.onopen = () => {
         console.log('WebSocket connection opened');
-        websocket.send('Hello from client!'); // Send a test message to the server on connection
+        // Server will send initial state upon connection
     };
 
     websocket.onmessage = (event) => {
@@ -33,7 +34,10 @@ function connectWebSocket() {
 }
 
 function updateGameOutput(message) {
-    gameOutput.innerHTML += `<p>${message}</p>`;
+    const messageElement = document.createElement('p');
+    messageElement.textContent = message; // Use textContent for safety
+    gameOutput.appendChild(messageElement);
+    gameOutput.scrollTop = gameOutput.scrollHeight; // Scroll to bottom
 }
 
 commandInput.addEventListener('keydown', (event) => {
@@ -47,4 +51,4 @@ commandInput.addEventListener('keydown', (event) => {
 });
 
 connectWebSocket(); // Establish WebSocket connection when script loads
-updateGameOutput("Welcome to the text-based RPG!"); // Initial game message
+// Server will send the initial welcome message/state
