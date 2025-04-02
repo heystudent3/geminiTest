@@ -38,7 +38,7 @@
     *   Branch: main (or your main branch name).
     *   Root Directory: Leave blank (or /server if Render needs to know the server files are in the server folder).
     *   Runtime: Node version (choose a recent stable version, e.g., Node 18 or 20).
-    *   Build Command: npm install
+    *   Build Command: cd server && npm install
     *   Start Command: npm start
 5.  Choose Instance Type (Free Tier):
     *   Scroll down to "Instance Type" and choose "Free".
