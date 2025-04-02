@@ -8,7 +8,7 @@ let websocket;
 function connectWebSocket() {
     // TODO: Replace with your production Render WebSocket URL (wss://...) when deploying
     // See hosting_instructions.txt for details.
-    const websocketURL = 'ws://localhost:3000'; // Connect to local server (for development)
+    const websocketURL = 'wss://pixel-quest-online-server.onrender.com'; // Connect to local server (for development)
     websocket = new WebSocket(websocketURL);
 
     websocket.onopen = () => {
