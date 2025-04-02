@@ -6,7 +6,8 @@ const commandInput = document.getElementById('commandInput');
 let websocket;
 
 function connectWebSocket() {
-    websocket = new WebSocket('ws://localhost:3000'); // Connect to local server (for development)
+    const websocketURL = prompt("Enter the WebSocket URL:", 'ws://localhost:3000');
+    websocket = new WebSocket(websocketURL); // Connect to local server (for development)
     // For production, you'll need to change this to your deployed server URL (e.g., ws://your-render-app-url.onrender.com)
 
     websocket.onopen = () => {
@@ -16,21 +17,18 @@ function connectWebSocket() {
 
     websocket.onmessage = (event) => {
         console.log('Received message:', event.data);
-        // --- Handle messages from server here ---
-        // For now, just log them
         updateGameOutput(event.data);
     };
 
     websocket.onclose = () => {
         console.log('WebSocket connection closed');
-        // --- Handle connection closed ---
-        // Optionally, attempt to reconnect after a delay
+        updateGameOutput("Connection closed. Reconnecting...");
         setTimeout(connectWebSocket, 3000); // Reconnect after 3 seconds
     };
 
     websocket.onerror = (error) => {
         console.error('WebSocket error:', error);
-        // --- Handle WebSocket errors ---
+        updateGameOutput(`WebSocket error: ${error}`);
     };
 }
 
