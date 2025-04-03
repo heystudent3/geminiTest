@@ -1,12 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Text Quest RPG</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII RPG</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="gameOutput"></div>
-    <input type="text" id="commandInput" placeholder="Enter command">
+    <header>
+        <h1>ASCII RPG Adventure</h1>
+    </header>
+    <main>
+        <div id="console-container">
+            <pre id="game-console"></pre> <!-- Using <pre> for fixed-width font rendering -->
+        </div>
+        <aside id="ui-elements">
+            <!-- Placeholder for future UI elements outside the console -->
+            <h2>Status</h2>
+            <div id="player-status">
+                <p>HP: --/--</p>
+                <p>MP: --/--</p>
+                <p>Level: --</p>
+                <p>XP: --/--</p>
+            </div>
+            <h2>Log</h2>
+            <div id="message-log">
+                <p>Welcome, adventurer!</p>
+            </div>
+        </aside>
+    </main>
+    <footer>
+        <p>Created with ASCII and Imagination</p>
+    </footer>
+    <!-- Game Logic Modules -->
+    <script src="../game/world.js"></script>
+    <script src="../game/items.js"></script>
+    <script src="../game/player.js"></script>
+    <script src="../game/combat.js"></script>
+    <script src="../game/engine.js"></script>
+
+    <!-- Main script (initializes and starts the game) -->
     <script src="script.js"></script>
 </body>
 </html>

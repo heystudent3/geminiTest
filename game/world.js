@@ -1,79 +1,92 @@
-// Defines the game world, locations, and potentially NPCs/enemies within them.
+// Game World Module
+// Responsible for managing map data, terrain, and potentially procedural generation.
 
-const locations = {
-    'town_square': {
-        id: 'town_square',
-        name: 'Town Square',
-        description: 'You are in the bustling town square. Cobblestone paths lead north, south, east, and west. A fountain bubbles in the center.',
-        exits: {
-            north: 'north_gate',
-            east: 'market_street',
-            south: 'south_gate',
-            west: 'tavern',
-        },
-        items: [],
-        enemies: [],
-    },
-    'north_gate': {
-        id: 'north_gate',
-        name: 'North Gate',
-        description: 'You stand at the sturdy North Gate of the town. The road leads north out into the wilderness. The town square is to the south.',
-        exits: {
-            north: 'forest_path', // Example exit to outside town
-            south: 'town_square',
-        },
-        items: [],
-        enemies: [],
-    },
-    'market_street': {
-        id: 'market_street',
-        name: 'Market Street',
-        description: 'Merchants hawk their wares along this busy street. The town square is to the west.',
-        exits: {
-            west: 'town_square',
-        },
-        items: [], // TODO: Add items later
-        enemies: [],
-    },
-    'south_gate': {
-        id: 'south_gate',
-        name: 'South Gate',
-        description: 'You are at the South Gate. The town square is to the north.',
-        exits: {
-            north: 'town_square',
-        },
-        items: [],
-        enemies: [],
-    },
-    'tavern': {
-        id: 'tavern',
-        name: 'The Drunken Dragon Tavern',
-        description: 'The air is thick with smoke and chatter. A burly bartender polishes a mug. The town square is to the east.',
-        exits: {
-            east: 'town_square',
-        },
-        items: [],
-        enemies: [], // TODO: Add NPCs later
-    },
-     'forest_path': {
-        id: 'forest_path',
-        name: 'Forest Path',
-        description: 'A winding path leads deeper into the dark forest. The North Gate is to the south.',
-        exits: {
-            south: 'north_gate',
-            // north: 'deep_forest' // Example deeper area
-        },
-        items: ['stick'], // Example item
-        enemies: ['goblin'], // Example enemy
-    },
-    // Add more locations as needed
+// Define Tile Types (based on reimagined_game_concept.md)
+const TILE_TYPES = {
+    WALL: { char: '#', color: 'color-wall', solid: true, description: 'Stone Wall' },
+    FLOOR: { char: '.', color: 'color-floor', solid: false, description: 'Dirt Floor' },
+    WATER: { char: '~', color: 'color-water', solid: true, description: 'Shallow Water' }, // Usually solid unless swimming is implemented
+    TREE: { char: 'T', color: 'color-tree', solid: true, description: 'Sturdy Tree' },
+    DOOR_CLOSED: { char: '+', color: 'color-door-closed', solid: true, description: 'Closed Door' },
+    DOOR_OPEN: { char: '/', color: 'color-door-open', solid: false, description: 'Open Doorway' },
+    STAIRS_DOWN: { char: '>', color: 'color-item', solid: false, description: 'Stairs Leading Down' },
+    STAIRS_UP: { char: '<', color: 'color-item', solid: false, description: 'Stairs Leading Up' },
+    GRASS: { char: '"', color: 'color-tree', solid: false, description: 'Tall Grass' }, // Added example
+    EMPTY: { char: ' ', color: 'inherit', solid: true, description: 'Void' } // Represents areas outside the map bounds
 };
 
-function getLocation(locationId) {
-    return locations[locationId];
+class World {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.tiles = Array(height).fill(null).map(() => Array(width).fill(TILE_TYPES.FLOOR)); // Default to floor
+        this.mapId = 'default_map'; // Identifier for this map area
+        this.seed = null; // For procedural generation tracking
+
+        console.log(`World created with dimensions: ${width}x${height}`);
+    }
+
+    // --- Map Generation ---
+    generateMap(algorithm = 'simple_room') {
+        console.log(`Generating map using algorithm: ${algorithm}`);
+        // Placeholder for generation logic
+        // For now, create a simple room with walls
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
+                    this.tiles[y][x] = TILE_TYPES.WALL; // Place walls around the border
+                } else {
+                    this.tiles[y][x] = TILE_TYPES.FLOOR; // Fill interior with floor
+                }
+            }
+        }
+        // Add some example features based on the concept preview
+        this.setTile(5, 5, TILE_TYPES.TREE);
+        this.setTile(10, 10, TILE_TYPES.WATER);
+        this.setTile(15, 8, TILE_TYPES.DOOR_CLOSED);
+        this.setTile(3, 12, TILE_TYPES.GRASS);
+
+        // Add stairs example
+        this.setTile(this.width - 2, this.height - 2, TILE_TYPES.STAIRS_DOWN);
+
+        console.log("Simple room map generated.");
+    }
+
+    // --- Tile Access ---
+    getTile(x, y) {
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+            return TILE_TYPES.EMPTY; // Return void/empty for out-of-bounds
+        }
+        return this.tiles[y][x];
+    }
+
+    setTile(x, y, tileType) {
+        if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+            this.tiles[y][x] = tileType;
+        } else {
+            console.warn(`Attempted to set tile outside map bounds at (${x}, ${y})`);
+        }
+    }
+
+    isSolid(x, y) {
+        const tile = this.getTile(x, y);
+        return tile.solid;
+    }
+
+    // --- Utility ---
+    // Add methods for finding starting positions, checking line of sight, etc. later
+    getStartingPosition() {
+        // Find a suitable starting floor tile
+        for (let y = 1; y < this.height - 1; y++) {
+            for (let x = 1; x < this.width - 1; x++) {
+                if (!this.isSolid(x, y)) {
+                    return { x: x, y: y };
+                }
+            }
+        }
+        return { x: 1, y: 1 }; // Fallback
+    }
 }
 
-module.exports = {
-    getLocation,
-    // We might add functions later like getEnemiesInLocation, getItemsInLocation, etc.
-};
+// Export the class and tile types if using modules
+// export { World, TILE_TYPES };

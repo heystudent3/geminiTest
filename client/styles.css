@@ -1,37 +1,125 @@
+/* General Page Styling */
 body {
+    background-color: #1a1a1a; /* Dark theme background */
+    color: #e0e0e0; /* Light text for contrast */
+    font-family: 'Arial', sans-serif; /* Modern font for UI outside console */
     margin: 0;
-    padding: 20px;
-    background-color: #222; /* Dark background */
-    color: #eee; /* Light text */
-    font-family: 'Courier New', Courier, monospace; /* Monospaced font for text RPG feel */
+    padding: 0;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 40px); /* Full height minus padding */
+    min-height: 100vh;
+    align-items: center;
 }
 
-#gameOutput {
-    flex-grow: 1; /* Take up available space */
-    background-color: #111; /* Slightly darker background for output */
+header, footer {
+    width: 100%;
+    text-align: center;
+    padding: 1rem 0;
+    background-color: #0d0d0d;
+}
+
+header h1 {
+    margin: 0;
+    color: #00ff00; /* Green accent */
+    font-weight: normal;
+}
+
+footer p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align items to the top */
+    padding: 2rem;
+    gap: 2rem; /* Space between console and UI */
+    flex-grow: 1;
+    width: 100%;
+    max-width: 1200px; /* Limit overall width */
+    box-sizing: border-box;
+}
+
+/* Fake Console Styling */
+#console-container {
+    border: 3px solid #00ff00; /* Green border like old monitors */
+    padding: 10px; /* Padding inside the border */
+    background-color: #000; /* Black background for the console */
+    border-radius: 8px; /* Slightly rounded corners */
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3); /* Subtle green glow */
+    /* We'll set width/height dynamically or based on fixed grid later */
+}
+
+#game-console {
+    font-family: 'Courier Prime', monospace; /* Fixed-width font */
+    font-size: 16px; /* Adjust as needed */
+    line-height: 1.1; /* Tight line height for grid look */
+    white-space: pre; /* Preserve whitespace and line breaks */
+    margin: 0;
+    overflow: hidden; /* Hide overflow for now */
+    /* Example fixed size (80x25 characters) - adjust font-size/line-height */
+    /* width: calc(80ch + 2px); /* Character width + small buffer */
+    /* height: calc(25 * 1.1em); /* Lines * line-height */
+    color: #f0f0f0; /* Default text color inside console */
+}
+
+/* UI Elements Styling */
+#ui-elements {
+    background-color: #2a2a2a;
+    padding: 1rem;
+    border-radius: 5px;
+    min-width: 200px; /* Minimum width for the sidebar */
     border: 1px solid #444;
-    padding: 15px;
-    overflow-y: auto; /* Add scrollbar if content overflows */
-    margin-bottom: 15px;
-    line-height: 1.4;
 }
 
-#gameOutput p {
-    margin: 0 0 5px 0; /* Spacing between messages */
+#ui-elements h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #00ff00;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #444;
+    padding-bottom: 0.3rem;
 }
 
-#commandInput {
-    padding: 10px;
-    font-family: inherit; /* Use the same font as body */
-    background-color: #333;
-    color: #eee;
-    border: 1px solid #555;
-    outline: none; /* Remove default focus outline */
+#player-status p, #message-log p {
+    margin: 0.3rem 0;
+    font-size: 0.9rem;
 }
 
-#commandInput:focus {
-    border-color: #777;
+#message-log {
+    max-height: 150px; /* Limit log height */
+    overflow-y: auto; /* Add scrollbar if needed */
+    border-top: 1px solid #444;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+}
+
+/* Basic ASCII Color Classes (Examples) */
+.color-player { color: #ffffff; font-weight: bold; }
+.color-wall { color: #888888; }
+.color-floor { color: #555555; }
+.color-enemy { color: #ff4444; }
+.color-item { color: #ffff00; }
+.color-npc { color: #00ffff; }
+.color-water { color: #4444ff; }
+.color-tree { color: #00cc00; }
+.color-door-closed { color: #ff8800; }
+.color-door-open { color: #aa6600; }
+.color-highlight { background-color: #555555; } /* For menus */
+
+/* Responsiveness (Basic) */
+@media (max-width: 768px) {
+    main {
+        flex-direction: column;
+        align-items: center;
+    }
+    #ui-elements {
+        width: 80%; /* Take more width on smaller screens */
+        max-width: 400px;
+    }
+    #console-container {
+        /* Allow scaling later if needed */
+    }
 }
