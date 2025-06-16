@@ -350,6 +350,19 @@ class GameEngine {
                 // If player took an action that advances the turn, let enemies act
                 if (turnAdvanced) {
                     this.updateEnemyTurns();
+                    // --- START Random Feature ---
+                    if (Math.random() < 0.2) { // 20% chance to add a random flavor message
+                        const flavorMessages = [
+                            "A gentle breeze whispers past.",
+                            "You hear a faint, distant howl.",
+                            "The ground trembles slightly.",
+                            "A strange symbol flashes in your mind's eye.",
+                            "You feel a momentary surge of energy."
+                        ];
+                        const randomIndex = Math.floor(Math.random() * flavorMessages.length);
+                        this.addLogMessage(flavorMessages[randomIndex]);
+                    }
+                    // --- END Random Feature ---
                 }
 
                 break; // End case 'playing'
