@@ -7,7 +7,8 @@ class GameEngine {
         this.statusElement = document.getElementById(statusElementId);
         this.logElement = document.getElementById(logElementId);
 
-        this.gameState = 'initializing'; // e.g., initializing, start_menu, playing, combat, game_over
+        this.gameState = 'initializing'; // e.g., initializing, start_menu, playing, combat, game_over, choice_menu, achievement_menu
+        this.currentChoice = null; // Stores { prompt: "", options: [], callback: fn }
         this.map = null; // Will hold the current World object
         this.player = null; // Will hold the Player object
         this.enemies = []; // List of enemies on the current map
@@ -97,6 +98,9 @@ class GameEngine {
             case 'start_menu':
                 this.renderStartMenu();
                 break;
+            case 'choice_menu':
+                this.renderChoiceMenu();
+                break;
             case 'playing':
                 this.renderMap();
                 this.renderItems();
@@ -156,6 +160,34 @@ class GameEngine {
 
             for (let i = 0; i < option.length; i++) {
                  this.consoleBuffer[currentY][optionX + i] = { char: option[i], color: color, bgColor: 'transparent' };
+            }
+            currentY++;
+        });
+    }
+
+    renderChoiceMenu() {
+        if (!this.currentChoice) return;
+
+        this.clearConsoleBuffer();
+        let currentY = Math.floor(this.consoleHeight / 2) - Math.floor(this.currentChoice.options.length / 2) - 2;
+
+        // Draw Prompt
+        const promptLines = this.currentChoice.prompt.match(/.{1,70}/g) || [this.currentChoice.prompt]; // Wrap long prompts
+        promptLines.forEach(line => {
+            const promptX = Math.floor((this.consoleWidth - line.length) / 2);
+            for (let i = 0; i < line.length; i++) {
+                this.consoleBuffer[currentY][promptX + i] = { char: line[i], color: 'color-default', bgColor: 'transparent' };
+            }
+            currentY++;
+        });
+        currentY++; // Add a blank line after prompt
+
+        // Draw Options
+        this.currentChoice.options.forEach((option, index) => {
+            const optionText = `${index + 1}. ${option.text}`;
+            const optionX = Math.floor((this.consoleWidth - optionText.length) / 2);
+            for (let i = 0; i < optionText.length; i++) {
+                this.consoleBuffer[currentY][optionX + i] = { char: optionText[i], color: 'color-highlight', bgColor: 'transparent' };
             }
             currentY++;
         });
@@ -274,6 +306,38 @@ class GameEngine {
         console.log(`LOG: ${message}`);
     }
 
+    // --- Choice / Menu Handling ---
+    promptChoice(prompt, options, callback) {
+        this.gameState = 'choice_menu';
+        this.currentChoice = { prompt, options, callback };
+        this.addLogMessage(prompt);
+        options.forEach((option, index) => {
+            this.addLogMessage(`${index + 1}. ${option.text}`);
+        });
+        this.render(); // Re-render to show choices
+    }
+
+    handleChoiceInput(event) {
+        if (!this.currentChoice) return;
+
+        const choiceNumber = parseInt(event.key);
+        if (!isNaN(choiceNumber) && choiceNumber >= 1 && choiceNumber <= this.currentChoice.options.length) {
+            const chosenOption = this.currentChoice.options[choiceNumber - 1];
+            this.addLogMessage(`You chose: ${chosenOption.text}`);
+            this.gameState = 'playing'; // Revert to playing after choice
+            this.clearConsoleBuffer(); // Clear choices from console
+            if (this.currentChoice.callback) {
+                this.currentChoice.callback(chosenOption.value);
+            }
+            this.currentChoice = null; // Clear current choice
+            this.render(); // Re-render game state
+            return true; // Input handled
+        } else {
+            this.addLogMessage("Invalid choice. Please enter the number corresponding to your choice.");
+            return false; // Input not handled
+        }
+    }
+
     // --- Input Handling ---
     handleInput(event) {
         if (!this.player || !this.map) return; // Can't handle input without player/map
@@ -286,6 +350,12 @@ class GameEngine {
         switch (this.gameState) {
             case 'start_menu':
                 this.addLogMessage(`Menu input (${event.key}) not implemented yet.`);
+                break;
+            case 'choice_menu':
+                if (this.handleChoiceInput(event)) {
+                    // If choice input was handled, prevent further processing for this turn
+                    return;
+                }
                 break;
 
             case 'playing':
@@ -474,6 +544,7 @@ class GameEngine {
                      // Remove item from world map
                      item.x = null; // No longer on map
                      item.y = null;
+                     this.player.incrementStat('itemsPickedUp', 1, this); // Increment stat for achievement tracking
                      this.items.splice(itemIndex, 1); // Remove from world item list
                  } else {
                      // Inventory full message is handled by player.addItem
@@ -482,6 +553,28 @@ class GameEngine {
         } else if (forcePickupAttempt) {
              this.addLogMessage("There is nothing here to pick up.");
         }
+    }
+    // --- Item Dropping ---
+    dropItems(x, y, lootTable) {
+        if (!lootTable || lootTable.length === 0) return;
+
+        lootTable.forEach(loot => {
+            if (Math.random() <= loot.chance) {
+                // For now, assuming simple Item objects from items.js
+                // In a real game, you'd load item definitions here
+                const droppedItem = { 
+                    name: loot.name || 'item', // Fallback name
+                    char: loot.char || ',    // Fallback char
+                    color: loot.color || 'color-item',
+                    type: loot.type || 'generic',
+                    properties: loot.properties || {},
+                    x: x,
+                    y: y
+                };
+                this.items.push(droppedItem);
+                this.addLogMessage(`${droppedItem.name} dropped at (${x}, ${y}).`);
+            }
+        });
     }
 }
 

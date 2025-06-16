@@ -1,3 +1,5 @@
+import { ACHIEVEMENTS } from './achievements.js';
+
 // Player Module
 // Represents the player character in the game.
 
@@ -29,6 +31,11 @@ class Player {
         this.inventory = []; // Array of Item objects
         this.skills = []; // Array of Skill objects
         this.inventoryLimit = 10;
+
+        // Achievement Tracking
+        this.achievementsEarned = []; // Stores IDs of earned achievements
+        this.enemiesKilled = 0;
+        this.itemsPickedUp = 0;
 
         console.log(`Player "${this.name}" created at (${this.x}, ${this.y})`);
     }
@@ -85,15 +92,15 @@ class Player {
     }
 
     // --- Progression ---
-    gainXP(amount) {
+    gainXP(amount, engine) {
         this.xp += amount;
-        console.log(`${this.name} gained ${amount} XP. Total XP: ${this.xp}/${this.xpToNextLevel}`);
+        engine.addLogMessage(`${this.name} gained ${amount} XP. Total XP: ${this.xp}/${this.xpToNextLevel}`);
         while (this.xp >= this.xpToNextLevel) {
-            this.levelUp();
+            this.levelUp(engine);
         }
     }
 
-    levelUp() {
+    levelUp(engine) {
         this.level++;
         this.xp -= this.xpToNextLevel; // Subtract threshold XP
         this.xpToNextLevel = Math.floor(this.xpToNextLevel * 1.5); // Increase XP needed for next level
@@ -109,8 +116,57 @@ class Player {
         this.hp = this.maxHp;
         this.mp = this.maxMp;
 
-        console.log(`${this.name} reached Level ${this.level}! Stats increased. HP/MP restored.`);
-        // Trigger UI notification in the engine
+        engine.addLogMessage(`${this.name} reached Level ${this.level}! Stats increased. HP/MP restored.`);
+        this.checkAchievements(engine);
+    }
+
+    // --- Stat Incrementer for Achievements ---
+    incrementStat(statName, amount = 1, engine) {
+        if (typeof this[statName] === 'number') {
+            this[statName] += amount;
+            this.checkAchievements(engine);
+        } else {
+            console.warn(`Attempted to increment non-numeric stat: ${statName}`);
+        }
+    }
+
+    // --- Achievement System ---
+    checkAchievements(engine) {
+        for (const achievementId in ACHIEVEMENTS) {
+            const achievement = ACHIEVEMENTS[achievementId];
+            if (!this.achievementsEarned.includes(achievement.id)) {
+                let criteriaMet = false;
+
+                switch (achievement.criteria.type) {
+                    case 'playerLevel':
+                        criteriaMet = this.level >= achievement.criteria.targetValue;
+                        break;
+                    case 'enemiesKilled':
+                        criteriaMet = this.enemiesKilled >= achievement.criteria.targetValue;
+                        break;
+                    case 'itemsPickedUp':
+                        criteriaMet = this.itemsPickedUp >= achievement.criteria.targetValue;
+                        break;
+                    // Add more criteria types as needed
+                }
+
+                if (criteriaMet) {
+                    this.achievementsEarned.push(achievement.id);
+                    engine.addLogMessage(`ACHIEVEMENT UNLOCKED: ${achievement.name} - ${achievement.description}`);
+                    // Apply reward
+                    if (achievement.reward) {
+                        switch (achievement.reward.type) {
+                            case 'xp':
+                                this.gainXP(achievement.reward.amount, engine); // Recursively call gainXP
+                                engine.addLogMessage(`Received ${achievement.reward.amount} XP as reward.`);
+                                break;
+                            // Add other reward types (e.g., gold, items, stats)
+                        }
+                    }
+                    // Potentially trigger a visual notification in the engine/client
+                }
+            }
+        }
     }
 
     // --- Inventory ---

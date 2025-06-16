@@ -33,12 +33,22 @@ class Enemy {
         }
     }
 
-    die() {
+    die(engine) {
+        if (!this.isAlive) return; // Ensure die only runs once
+
         console.log(`${this.name} has been defeated!`);
         this.isAlive = false;
         this.char = '%'; // Change appearance on death (e.g., corpse)
         this.color = 'color-wall'; // Dim color
-        // Drop loot logic would go here
+
+        if (engine) {
+            engine.player.gainXP(this.xpValue, engine);
+            engine.player.incrementStat('enemiesKilled', 1, engine);
+            // Drop loot
+            if (this.lootTable && this.lootTable.length > 0) {
+                engine.dropItems(this.x, this.y, this.lootTable);
+            }
+        }
     }
 
     // Basic AI action (can be expanded significantly)
@@ -111,14 +121,35 @@ class CombatManager {
         this.isInCombat = false;
         this.combatants = [];
         this.turnIndex = 0;
-        this.engine.gameState = 'playing'; // Return to exploration
-
+        this.engine.gameState = 'playing'; // Return to exploration before choices
         if (victory) {
             this.engine.addLogMessage("--- Victory! ---");
-            // Award XP, handle loot drops from defeated enemies
+            // Remove defeated enemies from the main engine's enemy list
+            this.engine.enemies = this.engine.enemies.filter(enemy => enemy.isAlive);
+
+            // Present post-combat choices
+            this.engine.promptChoice(
+                "You stand victorious! What will you do next?",
+                [
+                    { text: "Continue exploring the area.", value: "explore" },
+                    { text: "Return to a safe zone.", value: "safe_zone" }
+                ],
+                (choice) => {
+                    if (choice === "explore") {
+                        this.engine.addLogMessage("You decide to continue exploring.");
+                        // No specific action needed, game state already 'playing'
+                    } else if (choice === "safe_zone") {
+                        this.engine.addLogMessage("You decide to return to a safe zone.");
+                        // Implement safe zone logic (e.g., teleport player, heal, etc.)
+                        // For now, just a message
+                    }
+                    this.engine.render(); // Re-render after choice is processed
+                }
+            );
         } else {
             this.engine.addLogMessage("--- Defeated or Fled ---");
             // Handle player death or flee consequences
+            // For now, just log a message
         }
         this.engine.render(); // Trigger re-render for map view
     }
@@ -173,6 +204,9 @@ class CombatManager {
                 if (target instanceof Enemy && target.isAlive) {
                     this.engine.addLogMessage(`You attack ${target.name}!`);
                     target.takeDamage(player.attackPower);
+                    if (!target.isAlive) {
+                        target.die(this.engine); // Pass engine for XP/loot/achievements
+                    }
                     actionTaken = true;
                 } else {
                     this.engine.addLogMessage("Invalid attack target.");
